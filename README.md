@@ -4,7 +4,7 @@ A React Native application built with Expo, TypeScript, and Expo Router to help 
 
 ## Phase 1: handwriting verification
 
-Phase 1 includes the welcome screen, a randomly selected practice phrase, camera permission handling, photo capture, on-device text recognition, and a handwriting result screen. The latest confirmed handwriting sample and recognized text are stored on the device and reused when the app is opened again. Photos and recognized text are not sent to a service.
+Phase 1 includes the welcome screen, a randomly selected practice phrase, camera permission handling, photo capture, on-device text recognition, and a handwriting result screen. The latest handwriting sample and recognized text are stored on the device and reused when the app is opened again. Photos and recognized text are not sent to a service.
 
 ### Run with Expo
 

@@ -1,24 +1,14 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
-import {
-  Alert,
-  Image,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { useHandwritingSession } from '@/contexts/HandwritingSessionContext';
-import type { HandwritingCapture } from '@/contexts/HandwritingSessionContext';
-import { saveWritingStyle } from '@/services/storage/WritingStyleStorage';
 
 export default function HandwritingResultScreen() {
-  const { capture, setCapture } = useHandwritingSession();
-  const [saving, setSaving] = useState(false);
+  const { capture } = useHandwritingSession();
   const currentCapture = capture;
 
   if (!currentCapture) {
@@ -39,26 +29,6 @@ export default function HandwritingResultScreen() {
   const matches =
     currentCapture.detectedText.trim().toLocaleLowerCase() ===
     currentCapture.expectedText.trim().toLocaleLowerCase();
-
-  async function useWritingStyle(captureToSave: HandwritingCapture) {
-    if (saving) {
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const savedCapture = await saveWritingStyle(captureToSave);
-      setCapture(savedCapture);
-      router.replace('/');
-    } catch {
-      Alert.alert(
-        'Could not save your writing style',
-        'Please try again or take another photo.',
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <Screen>
@@ -97,9 +67,8 @@ export default function HandwritingResultScreen() {
 
       <View style={styles.actions}>
         <Button
-          label={saving ? 'Saving…' : 'Use this writing style'}
-          onPress={() => void useWritingStyle(currentCapture)}
-          disabled={saving}
+          label="Use this writing style"
+          onPress={() => router.replace('/')}
         />
         <Button
           label="Retake Photo"

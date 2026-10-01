@@ -16,6 +16,7 @@ import { getRandomPracticePhrase } from '@/constants/phrases';
 import { colors } from '@/constants/theme';
 import { useHandwritingSession } from '@/contexts/HandwritingSessionContext';
 import { ocrService } from '@/services/ocr/OCRService';
+import { saveWritingStyle } from '@/services/storage/WritingStyleStorage';
 
 export default function CameraScreen() {
   const { expected } = useLocalSearchParams<{ expected?: string }>();
@@ -54,11 +55,12 @@ export default function CameraScreen() {
       } catch {
         // The photo can still be saved as a handwriting sample without OCR text.
       }
-      setCapture({
+      const capture = await saveWritingStyle({
         imageUri: photo.uri,
         expectedText,
         detectedText,
       });
+      setCapture(capture);
       router.replace('/onboarding/handwriting-result');
     } catch {
       setCameraError(true);
