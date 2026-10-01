@@ -13,6 +13,9 @@ let mlkitOcrPromise: Promise<MlkitOcrModule | null> | null = null;
 
 function loadMlkitOcr(): Promise<MlkitOcrModule | null> {
   if (!mlkitOcrPromise) {
+    // Native module availability cannot change for the lifetime of this JS
+    // instance, so a failed load is cached permanently instead of retried on
+    // every capture.
     mlkitOcrPromise = import('expo-mlkit-ocr').catch(() => null);
   }
   return mlkitOcrPromise;
