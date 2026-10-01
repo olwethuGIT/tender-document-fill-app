@@ -1,4 +1,4 @@
-import { PlaceholderOCRProvider } from './PlaceholderOCRProvider';
+import { MLKitOCRProvider } from './MLKitOCRProvider';
 import type { OCRProvider } from './OCRProvider';
 
 export class OCRService {
@@ -9,4 +9,4 @@ export class OCRService {
   }
 }
 
-export const ocrService = new OCRService(new PlaceholderOCRProvider());
+export const ocrService = new OCRService(new MLKitOCRProvider());
