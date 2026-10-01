@@ -1,10 +1,18 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
+import { useHandwritingSession } from '@/contexts/HandwritingSessionContext';
 
 const steps = [
   'Write a short practice phrase',
@@ -13,6 +21,67 @@ const steps = [
 ];
 
 export default function WelcomeScreen() {
+  const { capture, isLoading } = useHandwritingSession();
+
+  if (isLoading) {
+    return (
+      <Screen>
+        <View style={styles.loading}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (capture) {
+    return (
+      <Screen>
+        <View style={styles.intro}>
+          <View style={styles.brandMark}>
+            <Text style={styles.brandMarkText}>T</Text>
+          </View>
+          <Text style={styles.eyebrow}>TENDER & QUOTATION ASSISTANT</Text>
+          <Text style={styles.title}>
+            {Platform.OS === 'web'
+              ? 'Your handwriting sample is ready.'
+              : 'Your handwriting style is saved.'}
+          </Text>
+          <Text style={styles.description}>
+            {Platform.OS === 'web'
+              ? 'This sample is available for this browser session. Use the mobile app to save it for next time.'
+              : 'We’ll reuse this sample, so you won’t need to write the practice phrase again.'}
+          </Text>
+        </View>
+
+        <Image
+          accessibilityLabel="Saved handwriting sample"
+          source={{ uri: capture.imageUri }}
+          resizeMode="contain"
+          style={styles.savedSample}
+        />
+
+        <Card>
+          <Text style={styles.cardTitle}>Recognized text</Text>
+          <Text style={styles.cardDescription}>
+            {capture.detectedText || 'No text was recognized in this sample.'}
+          </Text>
+        </Card>
+
+        <View style={styles.footer}>
+          <Button
+            label="Capture a new sample"
+            onPress={() => router.push('/onboarding/handwriting')}
+          />
+          <Text style={styles.privacyNote}>
+            {Platform.OS === 'web'
+              ? 'Web handwriting samples are not saved between sessions.'
+              : 'Your handwriting sample is saved on this device.'}
+          </Text>
+        </View>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <View style={styles.intro}>
@@ -135,6 +204,17 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: 'auto',
     gap: 12,
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  savedSample: {
+    width: '100%',
+    height: 200,
+    borderRadius: 18,
+    backgroundColor: colors.border,
   },
   privacyNote: {
     color: colors.muted,

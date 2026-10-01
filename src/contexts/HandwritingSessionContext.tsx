@@ -1,5 +1,7 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+
+import { loadWritingStyle } from '@/services/storage/WritingStyleStorage';
 
 export interface HandwritingCapture {
   imageUri: string;
@@ -10,6 +12,7 @@ export interface HandwritingCapture {
 interface HandwritingSessionContextValue {
   capture: HandwritingCapture | null;
   setCapture: (capture: HandwritingCapture) => void;
+  isLoading: boolean;
 }
 
 const HandwritingSessionContext =
@@ -21,7 +24,31 @@ export function HandwritingSessionProvider({
   children: ReactNode;
 }) {
   const [capture, setCapture] = useState<HandwritingCapture | null>(null);
-  const value = useMemo(() => ({ capture, setCapture }), [capture]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    void loadWritingStyle()
+      .then((savedCapture) => {
+        if (active) {
+          setCapture(savedCapture);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const value = useMemo(
+    () => ({ capture, setCapture, isLoading }),
+    [capture, isLoading],
+  );
 
   return (
     <HandwritingSessionContext.Provider value={value}>
