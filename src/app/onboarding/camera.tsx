@@ -192,7 +192,9 @@ function PermissionScreen({
         onPress={onBack}
         style={styles.backButton}
       >
-        <Text style={styles.backButtonText}>‹</Text>
+        <Text style={[styles.backButtonText, styles.permissionBackButtonText]}>
+          ‹
+        </Text>
       </Pressable>
       <View style={styles.permissionContent}>
         {busy ? <ActivityIndicator color={colors.primary} /> : null}
@@ -330,6 +332,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 28,
     fontWeight: '800',
+  },
+  permissionBackButtonText: {
+    color: colors.text,
   },
   permissionMessage: {
     color: colors.muted,
