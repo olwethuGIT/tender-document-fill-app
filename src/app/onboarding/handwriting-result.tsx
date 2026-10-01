@@ -5,7 +5,6 @@ import {
   Image,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
@@ -14,14 +13,15 @@ import { Card } from '@/components/Card';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
 import { useHandwritingSession } from '@/contexts/HandwritingSessionContext';
+import type { HandwritingCapture } from '@/contexts/HandwritingSessionContext';
+import { saveWritingStyle } from '@/services/storage/WritingStyleStorage';
 
 export default function HandwritingResultScreen() {
   const { capture, setCapture } = useHandwritingSession();
-  const [detectedText, setDetectedText] = useState(
-    capture?.detectedText ?? '',
-  );
+  const [saving, setSaving] = useState(false);
+  const currentCapture = capture;
 
-  if (!capture) {
+  if (!currentCapture) {
     return (
       <Screen>
         <Text style={styles.title}>No photo to review</Text>
@@ -37,78 +37,69 @@ export default function HandwritingResultScreen() {
   }
 
   const matches =
-    detectedText.trim().toLocaleLowerCase() ===
-    capture.expectedText.trim().toLocaleLowerCase();
+    currentCapture.detectedText.trim().toLocaleLowerCase() ===
+    currentCapture.expectedText.trim().toLocaleLowerCase();
 
-  function confirmText() {
-    const currentCapture = capture;
-    if (!currentCapture) {
+  async function useWritingStyle(captureToSave: HandwritingCapture) {
+    if (saving) {
       return;
     }
 
-    if (!detectedText.trim()) {
+    setSaving(true);
+    try {
+      const savedCapture = await saveWritingStyle(captureToSave);
+      setCapture(savedCapture);
+      router.replace('/');
+    } catch {
       Alert.alert(
-        'Add the detected text',
-        'OCR is not connected yet. Enter the text you can read from your photo before confirming.',
+        'Could not save your writing style',
+        'Please try again or take another photo.',
       );
-      return;
+    } finally {
+      setSaving(false);
     }
-
-    setCapture({ ...currentCapture, detectedText });
-    Alert.alert(
-      'Handwriting confirmed',
-      'Your verification step is complete. Tender document features will be added in a future phase.',
-      [{ text: 'Start over', onPress: () => router.replace('/') }],
-    );
   }
 
   return (
     <Screen>
       <View style={styles.header}>
         <Text style={styles.stepLabel}>REVIEW YOUR PHOTO</Text>
-        <Text style={styles.title}>Check the recognised text</Text>
+        <Text style={styles.title}>Your handwriting sample</Text>
         <Text style={styles.description}>
-          Compare the photo with the phrase. OCR is a placeholder in this
-          version, so you can enter the text manually.
+          {currentCapture.detectedText
+            ? 'Review the recognized text, then save this sample to use your writing style again.'
+            : 'No text was recognized. You can still save the photo as your handwriting sample.'}
         </Text>
       </View>
 
       <Image
         accessibilityLabel="Photo of your handwriting"
-        source={{ uri: capture.imageUri }}
+        source={{ uri: currentCapture.imageUri }}
         resizeMode="contain"
         style={styles.preview}
       />
 
       <Card>
         <Text style={styles.fieldLabel}>EXPECTED PHRASE</Text>
-        <Text style={styles.expected}>{capture.expectedText}</Text>
-        <Text style={[styles.matchStatus, matches && styles.matchSuccess]}>
-          {matches
-            ? 'The text matches the phrase.'
-            : 'Review the detected text before confirming.'}
+        <Text style={styles.expected}>{currentCapture.expectedText}</Text>
+        <Text style={styles.fieldLabel}>DETECTED TEXT</Text>
+        <Text style={styles.expected}>
+          {currentCapture.detectedText || 'No text was recognized in this photo.'}
         </Text>
+        {currentCapture.detectedText ? (
+          <Text style={[styles.matchStatus, matches && styles.matchSuccess]}>
+            {matches
+              ? 'The text matches the phrase.'
+              : 'The detected text differs from the phrase.'}
+          </Text>
+        ) : null}
       </Card>
-
-      <View style={styles.detectedGroup}>
-        <Text style={styles.inputLabel}>DETECTED TEXT</Text>
-        <TextInput
-          accessibilityLabel="Detected text"
-          value={detectedText}
-          onChangeText={setDetectedText}
-          placeholder="Enter the text shown in your photo"
-          placeholderTextColor={colors.muted}
-          multiline
-          textAlignVertical="top"
-          style={styles.input}
-        />
-      </View>
 
       <View style={styles.actions}>
         <Button
-          label="Confirm"
-          onPress={confirmText}
-          disabled={!detectedText.trim()}
+          label={saving ? 'Saving…' : 'Use this writing style'}
+          onPress={() => void useWritingStyle(currentCapture)}
+          disabled={saving}
         />
         <Button
           label="Retake Photo"
@@ -173,26 +164,6 @@ const styles = StyleSheet.create({
   matchSuccess: {
     color: colors.primary,
     fontWeight: '700',
-  },
-  detectedGroup: {
-    gap: 8,
-  },
-  inputLabel: {
-    color: colors.muted,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  input: {
-    minHeight: 108,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    fontSize: 16,
-    lineHeight: 23,
   },
   actions: {
     gap: 12,

@@ -48,7 +48,12 @@ export default function CameraScreen() {
       if (!photo?.uri) {
         throw new Error('Photo capture returned no image.');
       }
-      const detectedText = await ocrService.recognizeHandwriting(photo.uri);
+      let detectedText = '';
+      try {
+        detectedText = await ocrService.recognizeHandwriting(photo.uri);
+      } catch {
+        // The photo can still be saved as a handwriting sample without OCR text.
+      }
       setCapture({
         imageUri: photo.uri,
         expectedText,
